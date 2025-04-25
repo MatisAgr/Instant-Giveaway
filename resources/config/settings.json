@@ -1,0 +1,8 @@
+{
+  "chrome_path": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "wait_delay": 0.3,
+  "auto_download_driver": true,
+  "auto_close_tabs": true,
+  "retry_attempts": 3,
+  "links_file_path": "resources/data/links.json"
+}

@@ -1,0 +1,6 @@
+resources/data/links.json
+
+src/utils/chromedriver.exe
+
+# Python cache files
+__pycache__
