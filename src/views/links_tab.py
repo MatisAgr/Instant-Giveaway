@@ -258,26 +258,75 @@ class LinksTab(QWidget):
         # Désactiver le bouton pendant la vérification
         self.verify_button.setEnabled(False)
         
-        # Créer et configurer la boîte de dialogue de progression
-        progress = QProgressDialog("Vérification des liens...", "Annuler", 0, len(self.links), self)
-        progress.setWindowTitle("Vérification en cours")
-        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        # Créer et configurer la boîte de dialogue de progression améliorée
+        progress_dialog = QDialog(self)
+        progress_dialog.setWindowTitle("Vérification en cours")
+        progress_dialog.setWindowModality(Qt.WindowModality.WindowModal)
+        progress_dialog.resize(500, 300)
+        
+        # Layout principal
+        layout = QVBoxLayout(progress_dialog)
+        
+        # Label d'information
+        info_label = QLabel("Vérification des liens en cours...")
+        layout.addWidget(info_label)
+        
+        # Barre de progression
+        progress_bar = QProgressDialog("Vérification des liens...", "Annuler", 0, len(self.links), progress_dialog)
+        progress_bar.setWindowModality(Qt.WindowModality.NonModal)
+        progress_bar.setAutoClose(False)
+        progress_bar.setWindowFlags(Qt.WindowType.Widget)  # Pour éviter qu'elle ne s'affiche comme une fenêtre séparée
+        layout.addWidget(progress_bar)
+        
+        # Compteur de progression
+        counter_label = QLabel(f"0/{len(self.links)}")
+        counter_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(counter_label)
+        
+        # Zone de logs
+        log_area = QTextEdit()
+        log_area.setReadOnly(True)
+        log_area.setMaximumHeight(150)
+        layout.addWidget(log_area)
         
         # Créer le journal de logs
         self.verification_logs = []
         
         # Créer et démarrer le thread de vérification
         self.verifier = LinkVerifier(self.links)
+        
+        # Connecter les signaux
         self.verifier.link_status_signal.connect(self._update_link_status)
-        self.verifier.progress_signal.connect(progress.setValue)
+        self.verifier.progress_signal.connect(progress_bar.setValue)
+        self.verifier.progress_signal.connect(
+            lambda value: counter_label.setText(f"{value}/{len(self.links)}")
+        )
         self.verifier.finished_signal.connect(self._verification_completed)
-        self.verifier.log_signal.connect(lambda msg: self.verification_logs.append(msg))
+        self.verifier.finished_signal.connect(progress_dialog.close)
+        
+        # Gérer les logs
+        def update_logs(msg):
+            self.verification_logs.append(msg)
+            log_area.append(msg)
+            # Défiler automatiquement vers le bas
+            log_area.verticalScrollBar().setValue(log_area.verticalScrollBar().maximum())
+        
+        self.verifier.log_signal.connect(update_logs)
         
         # Connecter l'annulation
-        progress.canceled.connect(self.verifier.terminate)
+        progress_bar.canceled.connect(self.verifier.terminate)
+        progress_bar.canceled.connect(self._on_verification_canceled)
+        progress_bar.canceled.connect(progress_dialog.close)
         
         # Démarrer la vérification
         self.verifier.start()
+        
+        # Afficher la boîte de dialogue
+        progress_dialog.exec()
+    
+    def _on_verification_canceled(self):
+        """Réactive le bouton de vérification lorsque l'opération est annulée"""
+        self.verify_button.setEnabled(True)
     
     @pyqtSlot(str, LinkStatus)
     def _update_link_status(self, link, status):
