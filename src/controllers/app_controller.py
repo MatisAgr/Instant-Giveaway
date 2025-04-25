@@ -152,10 +152,6 @@ class AppController(QObject):
         if not self.giveaway_controller.start_verification(wait_delay):
             self._on_log("Impossible de démarrer la vérification")
             self.main_window.verification_tab.reset_ui()
-        
-        if not self.giveaway_controller.start_verification(wait_delay):
-            self._on_log("Impossible de démarrer la vérification")
-            self.main_window.verification_tab.reset_ui()
     
     def _on_stop_verification(self):
         """Arrête le processus de vérification"""
