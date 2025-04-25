@@ -25,6 +25,7 @@ class AppController(QObject):
         
         # Initialiser la vue principale
         self.main_window = MainWindow()
+        self.main_window.settings_tab.load_settings(self.settings.__dict__)
         
         # Connecter les signaux
         self._connect_signals()

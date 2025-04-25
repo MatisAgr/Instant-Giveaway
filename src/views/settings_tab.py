@@ -178,6 +178,8 @@ class SettingsTab(QWidget):
             "headless_mode": self.headless_mode_checkbox.isChecked(),
         }
         self.settings_changed_signal.emit(settings)
+        
+        
     
     def _on_reset_clicked(self):
         """Réinitialise les paramètres à leur valeur par défaut"""
@@ -191,6 +193,8 @@ class SettingsTab(QWidget):
     
     def load_settings(self, settings: dict):
         """Charge les paramètres dans l'interface"""
+        print(f"Chargement des paramètres: {settings}") 
+        
         if "language" in settings:
             # Trouver l'index correspondant à la langue sauvegardée
             index = self.language_combo.findData(settings["language"])
@@ -204,11 +208,15 @@ class SettingsTab(QWidget):
             
         if "wait_delay" in settings:
             self.wait_delay_spin.setValue(settings["wait_delay"])
+            
         if "auto_download_driver" in settings:
             self.auto_download_driver_checkbox.setChecked(settings["auto_download_driver"])
+            
         if "auto_close_tabs" in settings:
             self.auto_close_tabs_checkbox.setChecked(settings["auto_close_tabs"])
+            
         if "retry_attempts" in settings:
             self.retry_attempts_spin.setValue(settings["retry_attempts"])
+            
         if "headless_mode" in settings:
             self.headless_mode_checkbox.setChecked(settings["headless_mode"])

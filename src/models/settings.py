@@ -27,6 +27,7 @@ class Settings:
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
+                print(f"Chargement des paramètres: {data}")  
                 return cls(**data)
         except (json.JSONDecodeError, FileNotFoundError):
             return cls()
