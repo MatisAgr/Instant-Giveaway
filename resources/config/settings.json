@@ -4,6 +4,6 @@
   "auto_download_driver": true,
   "auto_close_tabs": true,
   "retry_attempts": 3,
-  "headless_mode": true,
+  "headless_mode": false,
   "links_file_path": "resources/data/links.json"
 }
