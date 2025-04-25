@@ -21,8 +21,7 @@ class VerificationTab(QWidget):
         
         # Affichage du pseudo de l'utilisateur avec un style amélioré
         user_layout = QHBoxLayout()
-        self.connection_status_icon = QLabel("⚫")  # Point pour indiquer le statut
-        self.connection_status_icon.setStyleSheet("color: red;")  # Rouge = non connecté par défaut
+        self.connection_status_icon = QLabel("⚪")  # Cercle neutre pour l'état initial
         
         self.username_label = QLabel(f"Utilisateur: <b>{self.username}</b>")
         
@@ -84,10 +83,17 @@ class VerificationTab(QWidget):
         if username and username.strip():
             self.username = username
             self.username_label.setText(f"Utilisateur: <b>{self.username}</b>")
-            # Mettre à jour l'indicateur de statut
-            self.connection_status_icon.setText("⚫")
-            self.connection_status_icon.setStyleSheet("color: green; font-size: 14px;")
-            self.connection_status_icon.setToolTip("Connecté")
+            
+            # Mise à jour de l'indicateur de statut avec emoji
+            if "(Auto)" in username:
+                # Mode auto: utiliser un cercle orange
+                self.connection_status_icon.setText("🟠")
+                self.connection_status_icon.setToolTip("Connecté (Mode Auto)")
+            else:
+                # Mode manuel: utiliser un cercle vert
+                self.connection_status_icon.setText("🟢")
+                self.connection_status_icon.setToolTip("Connecté (Mode Manuel)")
+                
             # Ajouter un message dans les logs
             self.add_log(f"Utilisateur connecté: {self.username}")
             # Activer le bouton de vérification
@@ -95,9 +101,9 @@ class VerificationTab(QWidget):
         else:
             self.username = "Non connecté"
             self.username_label.setText(f"Utilisateur: <b>{self.username}</b>")
+            
             # Mettre à jour l'indicateur de statut
             self.connection_status_icon.setText("⚫")
-            self.connection_status_icon.setStyleSheet("color: red; font-size: 14px;")
             self.connection_status_icon.setToolTip("Non connecté")
             self.add_log("Aucun utilisateur connecté")
             # Désactiver le bouton de vérification
