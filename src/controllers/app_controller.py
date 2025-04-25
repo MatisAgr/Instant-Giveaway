@@ -53,6 +53,10 @@ class AppController(QObject):
         tab.settings_changed_signal.connect(self._on_settings_changed)
         tab.links_import_signal.connect(self._on_import_links)
         
+        tab = self.main_window.links_tab
+        tab.links_changed_signal.connect(self._on_links_changed)
+
+        
         # Signaux du contrôleur de giveaway
         ctrl = self.giveaway_controller
         ctrl.log_signal.connect(self._on_log)
@@ -72,6 +76,7 @@ class AppController(QObject):
         """Charge les liens depuis le fichier de liens"""
         links = self.settings.load_links()
         self.giveaway_controller.set_links(links)
+        self.main_window.links_tab.load_links(links)
         
         # Mettre à jour l'interface
         self._on_log(f"Liens chargés: {len(links)}")
@@ -85,7 +90,10 @@ class AppController(QObject):
         
         # Initialiser le navigateur si nécessaire
         if not self.browser_controller.browser_model.driver:
-            driver = self.browser_controller.initialize_browser(wait_page_load=False)
+            # Récupérer le mode headless depuis les paramètres
+            headless_mode = self.settings.headless_mode if hasattr(self.settings, "headless_mode") else False
+            
+            driver = self.browser_controller.initialize_browser(wait_page_load=False, headless_mode=headless_mode)
             if not driver:
                 self._on_log("Impossible d'initialiser le navigateur")
                 self.main_window.participation_tab.reset_ui()
@@ -118,7 +126,14 @@ class AppController(QObject):
         
         # Initialiser le navigateur si nécessaire
         if not self.browser_controller.browser_model.driver:
-            driver = self.browser_controller.initialize_browser(wait_page_load=True)
+            # Récupérer le mode headless depuis les paramètres
+            headless_mode = self.settings.headless_mode if hasattr(self.settings, "headless_mode") else False
+            
+            # Afficher un message si le mode invisible est activé
+            if headless_mode:
+                self._on_log("Mode invisible activé pour la vérification")
+            
+            driver = self.browser_controller.initialize_browser(wait_page_load=True, headless_mode=headless_mode)
             if not driver:
                 self._on_log("Impossible d'initialiser le navigateur")
                 self.main_window.verification_tab.reset_ui()
@@ -136,6 +151,10 @@ class AppController(QObject):
         if not self.giveaway_controller.start_verification(wait_delay):
             self._on_log("Impossible de démarrer la vérification")
             self.main_window.verification_tab.reset_ui()
+        
+        if not self.giveaway_controller.start_verification(wait_delay):
+            self._on_log("Impossible de démarrer la vérification")
+            self.main_window.verification_tab.reset_ui()
     
     def _on_stop_verification(self):
         """Arrête le processus de vérification"""
@@ -146,6 +165,13 @@ class AppController(QObject):
         self.settings.update(new_settings)
         self.settings.save()
         self._on_log("Paramètres sauvegardés")
+    
+    def _on_links_changed(self, links):
+        """Enregistre les liens modifiés"""
+        self.giveaway_controller.set_links(links)
+        self.settings.save_links(links)
+        self._on_log(f"Liste de liens mise à jour: {len(links)} liens")
+
     
     def _on_import_links(self, file_path):
         """Importe des liens depuis un fichier"""
@@ -337,5 +363,5 @@ class AppController(QObject):
             QMessageBox.critical(
                 self.main_window,
                 "Erreur de connexion",
-                "Impossible de se connecter à Instant Gaming."
+                "Impossible de se connecter à Instant Gaming. \nVeuillez vous connecter sur l'onglet pour démarrer la participation ou connectez vous déjà au préalable sur le navigateur Chrome."
             )
