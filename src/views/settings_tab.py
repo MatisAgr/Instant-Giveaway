@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, 
                            QPushButton, QLineEdit, QSpinBox, QDoubleSpinBox,
-                           QCheckBox, QLabel, QFileDialog, QGroupBox)
+                           QCheckBox, QLabel, QFileDialog, QGroupBox, QComboBox)
 from PyQt6.QtCore import pyqtSignal
+import os
 
 class SettingsTab(QWidget):
     """Onglet pour configurer les paramètres de l'application"""
@@ -13,15 +14,51 @@ class SettingsTab(QWidget):
         super().__init__()
         self.init_ui()
         
+    def _get_default_chrome_path(self):
+        """Détermine le chemin par défaut de Chrome selon le système d'exploitation"""
+        # Chemins potentiels pour Windows
+        windows_paths = [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+        ]
+        
+        # Chemin utilisateur spécifique
+        username = os.getlogin()
+        user_path = fr"C:\Users\{username}\AppData\Local\Google\Chrome\Application\chrome.exe"
+        windows_paths.append(user_path)
+        
+        # Vérifier si l'un des chemins existe
+        for path in windows_paths:
+            if os.path.isfile(path):
+                return path
+                
+        # Si aucun chemin n'est trouvé, retourner le chemin utilisateur par défaut
+        return user_path
+        
     def init_ui(self):
         """Initialisation de l'interface utilisateur"""
         main_layout = QVBoxLayout(self)
+        
+        # Groupe pour les préférences d'interface
+        interface_group = QGroupBox("Préférences d'interface")
+        interface_layout = QFormLayout()
+        
+        self.language_combo = QComboBox()
+        self.language_combo.addItem("Français (Default)", "fr")
+        self.language_combo.addItem("English (COMING SOON)", "en")
+        self.language_combo.addItem("Español (COMING SOON)", "es")
+        self.language_combo.addItem("Deutsch (COMING SOON)", "de")
+        self.language_combo.addItem("Italiano (COMING SOON)", "it")
+        
+        interface_layout.addRow("Langue:", self.language_combo)
+        interface_group.setLayout(interface_layout)
         
         # Groupe pour les paramètres du navigateur
         browser_group = QGroupBox("Paramètres du navigateur")
         browser_layout = QFormLayout()
         
         self.chrome_path_edit = QLineEdit()
+        self.chrome_path_edit.setText(self._get_default_chrome_path())
         self.chrome_path_button = QPushButton("Parcourir...")
         
         chrome_path_layout = QHBoxLayout()
@@ -36,9 +73,14 @@ class SettingsTab(QWidget):
         self.auto_download_driver_checkbox = QCheckBox("Télécharger automatiquement le driver Chrome")
         self.auto_download_driver_checkbox.setChecked(True)
         
+        self.headless_mode_checkbox = QCheckBox("Mode invisible (exécuter Chrome en arrière-plan)")
+        self.headless_mode_checkbox.setChecked(False)
+        self.headless_mode_checkbox.setToolTip("Chrome s'exécutera sans afficher son interface graphique")
+        
         browser_layout.addRow("Chemin Chrome:", chrome_path_layout)
         browser_layout.addRow("Délai d'attente (s):", self.wait_delay_spin)
         browser_layout.addRow(self.auto_download_driver_checkbox)
+        browser_layout.addRow(self.headless_mode_checkbox)
         
         browser_group.setLayout(browser_layout)
         
@@ -93,6 +135,7 @@ class SettingsTab(QWidget):
         self.reset_button.clicked.connect(self._on_reset_clicked)
         
         # Ajouter les widgets au layout principal
+        main_layout.addWidget(interface_group)
         main_layout.addWidget(browser_group)
         main_layout.addWidget(participation_group)
         main_layout.addWidget(links_group)
@@ -126,26 +169,39 @@ class SettingsTab(QWidget):
     def _on_save_clicked(self):
         """Enregistre les paramètres"""
         settings = {
+            "language": self.language_combo.currentData(),
             "chrome_path": self.chrome_path_edit.text(),
             "wait_delay": self.wait_delay_spin.value(),
             "auto_download_driver": self.auto_download_driver_checkbox.isChecked(),
             "auto_close_tabs": self.auto_close_tabs_checkbox.isChecked(),
             "retry_attempts": self.retry_attempts_spin.value(),
+            "headless_mode": self.headless_mode_checkbox.isChecked(),
         }
         self.settings_changed_signal.emit(settings)
     
     def _on_reset_clicked(self):
         """Réinitialise les paramètres à leur valeur par défaut"""
-        self.chrome_path_edit.setText("")
+        self.language_combo.setCurrentIndex(0)  # Français par défaut
+        self.chrome_path_edit.setText(self._get_default_chrome_path())
         self.wait_delay_spin.setValue(0.3)
         self.auto_download_driver_checkbox.setChecked(True)
         self.auto_close_tabs_checkbox.setChecked(True)
         self.retry_attempts_spin.setValue(3)
+        self.headless_mode_checkbox.setChecked(False)
     
     def load_settings(self, settings: dict):
         """Charge les paramètres dans l'interface"""
+        if "language" in settings:
+            # Trouver l'index correspondant à la langue sauvegardée
+            index = self.language_combo.findData(settings["language"])
+            if index >= 0:
+                self.language_combo.setCurrentIndex(index)
+        
         if "chrome_path" in settings:
             self.chrome_path_edit.setText(settings["chrome_path"])
+        else:
+            self.chrome_path_edit.setText(self._get_default_chrome_path())
+            
         if "wait_delay" in settings:
             self.wait_delay_spin.setValue(settings["wait_delay"])
         if "auto_download_driver" in settings:
@@ -154,3 +210,5 @@ class SettingsTab(QWidget):
             self.auto_close_tabs_checkbox.setChecked(settings["auto_close_tabs"])
         if "retry_attempts" in settings:
             self.retry_attempts_spin.setValue(settings["retry_attempts"])
+        if "headless_mode" in settings:
+            self.headless_mode_checkbox.setChecked(settings["headless_mode"])

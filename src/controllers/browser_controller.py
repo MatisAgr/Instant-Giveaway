@@ -18,7 +18,7 @@ class BrowserController(QObject):
         self.browser_model = BrowserModel()
         self.username = None
         
-    def initialize_browser(self, wait_page_load=False):
+    def initialize_browser(self, wait_page_load=False, headless_mode=False):
         """Initialise le navigateur Chrome"""
         try:
             if self.browser_model.is_chrome_running():
@@ -26,7 +26,10 @@ class BrowserController(QObject):
                 self.browser_model.kill_chrome()
             
             self.log_signal.emit("Initialisation du navigateur Chrome...")
-            self.browser_model.initialize_driver(wait_page_load)
+            if headless_mode:
+                self.log_signal.emit("Mode invisible activé")
+                
+            self.browser_model.initialize_driver(wait_page_load, headless_mode)
             self.browser_ready_signal.emit(True)
             
             return self.browser_model.driver
@@ -49,29 +52,102 @@ class BrowserController(QObject):
             self.log_signal.emit("Erreur: Le navigateur n'est pas initialisé")
             return False
         
+        driver = self.browser_model.driver
+        
         try:
-            driver = self.browser_model.driver
+            # Vérifier si nous sommes en mode headless
+            is_headless = False
+            for arg in driver.execute_script("return window.navigator.userAgent"):
+                if "headless" in arg.lower():
+                    is_headless = True
+                    break
             
             self.log_signal.emit("Vérification de la connexion à Instant Gaming...")
             driver.get('https://www.instant-gaming.com/fr/')
             
-            # Vérifie si l'utilisateur est connecté
-            elements = driver.find_elements(By.CSS_SELECTOR, '.login-container .user .avatar')
+            # Attente explicite plus longue pour le mode headless
+            if is_headless:
+                self.log_signal.emit("Mode headless - Attente prolongée du chargement...")
+                import time
+                time.sleep(5)  # Attente de 5 secondes pour s'assurer que la page est bien chargée
+                
+                # Capture d'écran pour déboguer en mode headless
+                screenshot_path = "debug_homepage.png"
+                driver.save_screenshot(screenshot_path)
+                self.log_signal.emit(f"Capture d'écran de la page d'accueil enregistrée dans {screenshot_path}")
             
-            if elements:
+            # Vérifie si l'utilisateur est connecté avec plusieurs tentatives
+            is_connected = False
+            selectors_for_avatar = [
+                '.login-container .user .avatar',
+                '.user-info .avatar',
+                '.user .avatar',
+                '#igcNavbarRight .avatar'
+            ]
+            
+            for selector in selectors_for_avatar:
+                try:
+                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    if elements and len(elements) > 0:
+                        is_connected = True
+                        break
+                except Exception:
+                    continue
+            
+            if is_connected:
                 self.log_signal.emit("Déjà connecté à Instant Gaming")
                 
-                # Récupérer le nom d'utilisateur
-                self.username = driver.find_element(By.ID, 'user-menu-dashboard').get_attribute("href").split('/')[-1]
-                self.log_signal.emit(f"Connecté en tant que: {self.username}")
+                try:
+                    # Récupérer le nom d'utilisateur
+                    dashboard_element = driver.find_element(By.ID, 'user-menu-dashboard')
+                    self.username = dashboard_element.get_attribute("href").split('/')[-1]
+                    self.log_signal.emit(f"Connecté en tant que: {self.username}")
+                except Exception as e:
+                    self.log_signal.emit(f"Connecté mais impossible de récupérer le nom d'utilisateur: {str(e)}")
                 
                 self.login_status_signal.emit(True)
                 return True
             else:
-                self.log_signal.emit("Connexion requise, cliquez sur l'icône utilisateur...")
+                self.log_signal.emit("Connexion requise, recherche du bouton de connexion...")
+                
+                # Essayer différents sélecteurs pour le bouton de connexion
+                login_selectors = [
+                    '.login-container .icon-user',
+                    '.login-container a.connexion',
+                    'a.connexion',
+                    '.login-btn',
+                    '#loginBtn',
+                    '.user-login',
+                    '.login'
+                ]
+                
+                icon_user = None
+                for selector in login_selectors:
+                    try:
+                        icon_user = driver.find_element(By.CSS_SELECTOR, selector)
+                        if icon_user:
+                            self.log_signal.emit(f"Bouton de connexion trouvé avec le sélecteur: {selector}")
+                            break
+                    except Exception:
+                        continue
+                
+                if not icon_user:
+                    self.log_signal.emit("Impossible de trouver le bouton de connexion")
+                    
+                    # Capture d'écran pour débogage
+                    screenshot_path = "debug_login_failed.png"
+                    driver.save_screenshot(screenshot_path)
+                    self.log_signal.emit(f"Capture d'écran enregistrée dans {screenshot_path}")
+                    
+                    # Le mode headless n'est peut-être pas compatible avec le site
+                    if is_headless:
+                        self.log_signal.emit("Le mode invisible semble incompatible avec Instant Gaming. Essayez en mode normal.")
+                    
+                    self.login_status_signal.emit(False)
+                    return False
                 
                 # Cliquer sur l'icône utilisateur pour ouvrir la boîte de connexion
-                icon_user = driver.find_element(By.CSS_SELECTOR, '.login-container .icon-user')
+                self.log_signal.emit("Clic sur le bouton de connexion...")
                 icon_user.click()
                 
                 # Attendre que l'utilisateur se connecte
@@ -82,13 +158,31 @@ class BrowserController(QObject):
                     wait = WebDriverWait(driver, 120)
                     wait.until(EC.invisibility_of_element_located((By.ID, 'loginbox-register')))
                     
-                    # Récupérer le nom d'utilisateur
+                    # Recharger la page pour s'assurer que le statut de connexion est à jour
                     driver.get('https://www.instant-gaming.com/fr/')
-                    self.username = driver.find_element(By.ID, 'user-menu-dashboard').get_attribute("href").split('/')[-1]
                     
-                    self.log_signal.emit(f"Connecté avec succès en tant que: {self.username}")
-                    self.login_status_signal.emit(True)
-                    return True
+                    # Attendre le chargement de la page
+                    time.sleep(3)
+                    
+                    try:
+                        # Récupérer le nom d'utilisateur
+                        dashboard_element = driver.find_element(By.ID, 'user-menu-dashboard')
+                        self.username = dashboard_element.get_attribute("href").split('/')[-1]
+                        self.log_signal.emit(f"Connecté avec succès en tant que: {self.username}")
+                        self.login_status_signal.emit(True)
+                        return True
+                    except Exception as e:
+                        self.log_signal.emit(f"Erreur lors de la récupération du nom d'utilisateur: {str(e)}")
+                        # Essayer de vérifier autrement si connecté
+                        for selector in selectors_for_avatar:
+                            if driver.find_elements(By.CSS_SELECTOR, selector):
+                                self.log_signal.emit("Connecté avec succès, mais impossible de récupérer le nom d'utilisateur")
+                                self.login_status_signal.emit(True)
+                                return True
+                        
+                        self.log_signal.emit("La connexion semble avoir échoué")
+                        self.login_status_signal.emit(False)
+                        return False
                 
                 except TimeoutException:
                     self.log_signal.emit("Échec de la connexion: délai dépassé")
@@ -97,8 +191,18 @@ class BrowserController(QObject):
         
         except Exception as e:
             self.log_signal.emit(f"Erreur lors de la connexion: {str(e)}")
+            
+            # Capture d'écran en cas d'erreur
+            try:
+                screenshot_path = "login_error.png"
+                driver.save_screenshot(screenshot_path)
+                self.log_signal.emit(f"Capture d'écran d'erreur enregistrée dans {screenshot_path}")
+            except:
+                pass
+                
             self.login_status_signal.emit(False)
             return False
+    
     
     def close_extra_tabs(self):
         """Ferme tous les onglets sauf l'onglet principal"""
