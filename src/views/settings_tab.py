@@ -86,6 +86,8 @@ class SettingsTab(QWidget):
         self.wait_delay_spin.setRange(0.1, 10.0)
         self.wait_delay_spin.setSingleStep(0.1)
         self.wait_delay_spin.setValue(0.3)
+        self.wait_delay_spin.setEnabled(False)  # TODO: Implémenter la fonctionnalité partout 
+        self.wait_delay_spin.setToolTip("Fonctionnalité à venir dans une prochaine mise à jour")
         
         self.auto_download_driver_checkbox = QCheckBox("Télécharger automatiquement le driver Chrome")
         self.auto_download_driver_checkbox.setChecked(True)
