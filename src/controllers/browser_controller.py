@@ -1,8 +1,10 @@
 from PyQt6.QtCore import QObject, pyqtSignal
+import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from threading import Thread
 
 from src.models.browser import BrowserModel
 
@@ -17,6 +19,11 @@ class BrowserController(QObject):
         super().__init__()
         self.browser_model = BrowserModel()
         self.username = None
+        self.settings = None
+        
+    def set_settings(self, settings):
+        """Configure les paramètres à utiliser"""
+        self.settings = settings
         
     def initialize_browser(self, wait_page_load=False, headless_mode=False):
         """Initialise le navigateur Chrome"""
@@ -39,12 +46,27 @@ class BrowserController(QObject):
             return None
     
     def close_browser(self):
-        """Ferme le navigateur Chrome"""
-        try:
-            self.log_signal.emit("Fermeture du navigateur...")
-            self.browser_model.close_driver()
-        except Exception as e:
-            self.log_signal.emit(f"Erreur lors de la fermeture du navigateur: {str(e)}")
+        """Ferme proprement le navigateur dans un thread séparé pour éviter de bloquer l'interface"""
+        if self.browser_model.driver:
+            self.log_signal.emit("Fermeture du navigateur en cours...")
+            
+            # Conserver une référence au driver actuel
+            driver_to_close = self.browser_model.driver
+            
+            # Réinitialiser immédiatement la référence au driver
+            self.browser_model.driver = None
+            self.username = None
+            
+            # Créer un thread pour fermer le navigateur
+            def close_browser_thread():
+                try:
+                    driver_to_close.quit()
+                    self.log_signal.emit("Navigateur fermé avec succès")
+                except Exception as e:
+                    self.log_signal.emit(f"Erreur lors de la fermeture du navigateur: {str(e)}")
+            
+            # Démarrer le thread
+            Thread(target=close_browser_thread, daemon=True).start()
     
     def login(self):
         """Demande à l'utilisateur de se connecter à son compte Instant Gaming"""
@@ -68,7 +90,6 @@ class BrowserController(QObject):
             # Attente explicite plus longue pour le mode headless
             if is_headless:
                 self.log_signal.emit("Mode headless - Attente prolongée du chargement...")
-                import time
                 time.sleep(5)  # Attente de 5 secondes pour s'assurer que la page est bien chargée
                 
                 # Capture d'écran pour déboguer en mode headless
@@ -97,6 +118,13 @@ class BrowserController(QObject):
             if is_connected:
                 self.log_signal.emit("Déjà connecté à Instant Gaming")
                 
+                # Vérifier si l'utilisateur a configuré un pseudo manuellement
+                if self.settings and not self.settings.auto_detect_username and self.settings.username:
+                    self.username = self.settings.username
+                    self.log_signal.emit(f"Utilisation du pseudo configuré: {self.username}")
+                    self.login_status_signal.emit(True)
+                    return True
+                
                 try:
                     # Récupérer le nom d'utilisateur
                     dashboard_element = driver.find_element(By.ID, 'user-menu-dashboard')
@@ -104,6 +132,11 @@ class BrowserController(QObject):
                     self.log_signal.emit(f"Connecté en tant que: {self.username}")
                 except Exception as e:
                     self.log_signal.emit(f"Connecté mais impossible de récupérer le nom d'utilisateur: {str(e)}")
+                    
+                    # Fallback sur le nom d'utilisateur configuré si disponible
+                    if self.settings and self.settings.username:
+                        self.username = self.settings.username
+                        self.log_signal.emit(f"Utilisation du pseudo configuré comme fallback: {self.username}")
                 
                 self.login_status_signal.emit(True)
                 return True
@@ -164,6 +197,13 @@ class BrowserController(QObject):
                     # Attendre le chargement de la page
                     time.sleep(3)
                     
+                    # Vérifier si l'utilisateur a configuré un pseudo manuellement
+                    if self.settings and not self.settings.auto_detect_username and self.settings.username:
+                        self.username = self.settings.username
+                        self.log_signal.emit(f"Utilisation du pseudo configuré après connexion: {self.username}")
+                        self.login_status_signal.emit(True)
+                        return True
+                    
                     try:
                         # Récupérer le nom d'utilisateur
                         dashboard_element = driver.find_element(By.ID, 'user-menu-dashboard')
@@ -176,9 +216,16 @@ class BrowserController(QObject):
                         # Essayer de vérifier autrement si connecté
                         for selector in selectors_for_avatar:
                             if driver.find_elements(By.CSS_SELECTOR, selector):
-                                self.log_signal.emit("Connecté avec succès, mais impossible de récupérer le nom d'utilisateur")
-                                self.login_status_signal.emit(True)
-                                return True
+                                # Fallback sur le nom d'utilisateur configuré si disponible
+                                if self.settings and self.settings.username:
+                                    self.username = self.settings.username
+                                    self.log_signal.emit(f"Connecté mais impossible de récupérer le nom d'utilisateur. Utilisation du pseudo configuré: {self.username}")
+                                    self.login_status_signal.emit(True)
+                                    return True
+                                else:
+                                    self.log_signal.emit("Connecté avec succès, mais impossible de récupérer le nom d'utilisateur")
+                                    self.login_status_signal.emit(True)
+                                    return True
                         
                         self.log_signal.emit("La connexion semble avoir échoué")
                         self.login_status_signal.emit(False)
@@ -202,7 +249,6 @@ class BrowserController(QObject):
                 
             self.login_status_signal.emit(False)
             return False
-    
     
     def close_extra_tabs(self):
         """Ferme tous les onglets sauf l'onglet principal"""

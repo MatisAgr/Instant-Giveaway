@@ -5,5 +5,7 @@
   "auto_close_tabs": true,
   "retry_attempts": 3,
   "headless_mode": false,
-  "links_file_path": "resources/data/links.json"
+  "links_file_path": "resources/data/links.json",
+  "auto_detect_username": true,
+  "username": ""
 }

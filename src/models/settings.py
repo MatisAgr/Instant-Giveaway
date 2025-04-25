@@ -13,6 +13,8 @@ class Settings:
     retry_attempts: int = 3
     headless_mode: bool = False
     links_file_path: str = "resources/data/links.json"
+    auto_detect_username: bool = True
+    username: str = ""
     
     @classmethod
     def load(cls) -> 'Settings':

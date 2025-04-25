@@ -53,6 +53,23 @@ class SettingsTab(QWidget):
         interface_layout.addRow("Langue:", self.language_combo)
         interface_group.setLayout(interface_layout)
         
+        # Groupe pour les paramètres utilisateur
+        user_group = QGroupBox("Paramètres utilisateur")
+        user_layout = QFormLayout()
+        
+        self.auto_detect_username_checkbox = QCheckBox("Détecter automatiquement votre pseudo")
+        self.auto_detect_username_checkbox.setChecked(True)
+        self.auto_detect_username_checkbox.stateChanged.connect(self._on_auto_detect_changed)
+        
+        self.username_edit = QLineEdit()
+        self.username_edit.setPlaceholderText("Votre pseudo Instant Gaming")
+        self.username_edit.setEnabled(False)
+        
+        user_layout.addRow(self.auto_detect_username_checkbox)
+        user_layout.addRow("Pseudo:", self.username_edit)
+        
+        user_group.setLayout(user_layout)
+        
         # Groupe pour les paramètres du navigateur
         browser_group = QGroupBox("Paramètres du navigateur")
         browser_layout = QFormLayout()
@@ -136,11 +153,16 @@ class SettingsTab(QWidget):
         
         # Ajouter les widgets au layout principal
         main_layout.addWidget(interface_group)
+        main_layout.addWidget(user_group)
         main_layout.addWidget(browser_group)
         main_layout.addWidget(participation_group)
         main_layout.addWidget(links_group)
         main_layout.addStretch()
         main_layout.addLayout(buttons_layout)
+    
+    def _on_auto_detect_changed(self, state):
+        """Active ou désactive le champ de pseudo en fonction de l'état de la case à cocher"""
+        self.username_edit.setEnabled(not state)
     
     def _on_chrome_path_clicked(self):
         """Ouvre une boîte de dialogue pour sélectionner le chemin de Chrome"""
@@ -176,9 +198,10 @@ class SettingsTab(QWidget):
             "auto_close_tabs": self.auto_close_tabs_checkbox.isChecked(),
             "retry_attempts": self.retry_attempts_spin.value(),
             "headless_mode": self.headless_mode_checkbox.isChecked(),
+            "auto_detect_username": self.auto_detect_username_checkbox.isChecked(),
+            "username": self.username_edit.text(),
         }
         self.settings_changed_signal.emit(settings)
-        
         
     
     def _on_reset_clicked(self):
@@ -190,6 +213,9 @@ class SettingsTab(QWidget):
         self.auto_close_tabs_checkbox.setChecked(True)
         self.retry_attempts_spin.setValue(3)
         self.headless_mode_checkbox.setChecked(False)
+        self.auto_detect_username_checkbox.setChecked(True)
+        self.username_edit.setText("")
+        self.username_edit.setEnabled(False)
     
     def load_settings(self, settings: dict):
         """Charge les paramètres dans l'interface"""
@@ -220,3 +246,10 @@ class SettingsTab(QWidget):
             
         if "headless_mode" in settings:
             self.headless_mode_checkbox.setChecked(settings["headless_mode"])
+        
+        if "auto_detect_username" in settings:
+            self.auto_detect_username_checkbox.setChecked(settings["auto_detect_username"])
+            self.username_edit.setEnabled(not settings["auto_detect_username"])
+            
+        if "username" in settings:
+            self.username_edit.setText(settings["username"])
