@@ -21,16 +21,32 @@ class AppController(QObject):
         
         # Initialiser les contrôleurs
         self.browser_controller = BrowserController()
+        self.browser_controller.set_settings(self.settings)
         self.giveaway_controller = GiveawayController(self.browser_controller)
         
         # Initialiser la vue principale
         self.main_window = MainWindow()
+        self.main_window.settings_tab.load_settings(self.settings.__dict__)
         
         # Connecter les signaux
         self._connect_signals()
         
         # Charger les liens
         self._load_links()
+        
+        # Initialiser l'affichage du nom d'utilisateur
+        if not self.settings.auto_detect_username and self.settings.username:
+            # Mode manuel avec pseudo défini
+            self.main_window.verification_tab.set_username(self.settings.username)
+        elif self.settings.auto_detect_username:
+            # Mode auto
+            self.main_window.verification_tab.set_username("(Auto)")
+            if self.settings.username:
+                # Si un pseudo par défaut est défini, l'afficher avec la mention Auto
+                self.main_window.verification_tab.set_username(f"{self.settings.username} (Auto)")
+        else:
+            # Aucun pseudo défini
+            self.main_window.verification_tab.set_username("Non connecté")
     
     def show_main_window(self):
         """Affiche la fenêtre principale"""
@@ -53,6 +69,10 @@ class AppController(QObject):
         tab.settings_changed_signal.connect(self._on_settings_changed)
         tab.links_import_signal.connect(self._on_import_links)
         
+        tab = self.main_window.links_tab
+        tab.links_changed_signal.connect(self._on_links_changed)
+
+        
         # Signaux du contrôleur de giveaway
         ctrl = self.giveaway_controller
         ctrl.log_signal.connect(self._on_log)
@@ -72,6 +92,7 @@ class AppController(QObject):
         """Charge les liens depuis le fichier de liens"""
         links = self.settings.load_links()
         self.giveaway_controller.set_links(links)
+        self.main_window.links_tab.load_links(links)
         
         # Mettre à jour l'interface
         self._on_log(f"Liens chargés: {len(links)}")
@@ -83,9 +104,22 @@ class AppController(QObject):
         # Réinitialiser la table
         self.main_window.participation_tab.table.setRowCount(0)
         
+        # Vérifier si le navigateur est toujours actif ou s'il faut le réinitialiser
+        if self.browser_controller.browser_model.driver:
+            try:
+                # Tester si la session est toujours valide
+                self.browser_controller.browser_model.driver.current_url
+            except Exception as e:
+                self._on_log("Session de navigateur expirée, réinitialisation...")
+                self.browser_controller.close_browser()
+                self.browser_controller.browser_model.driver = None
+        
         # Initialiser le navigateur si nécessaire
         if not self.browser_controller.browser_model.driver:
-            driver = self.browser_controller.initialize_browser(wait_page_load=False)
+            # Récupérer le mode headless depuis les paramètres
+            headless_mode = self.settings.headless_mode if hasattr(self.settings, "headless_mode") else False
+            
+            driver = self.browser_controller.initialize_browser(wait_page_load=False, headless_mode=headless_mode)
             if not driver:
                 self._on_log("Impossible d'initialiser le navigateur")
                 self.main_window.participation_tab.reset_ui()
@@ -116,9 +150,26 @@ class AppController(QObject):
         # Réinitialiser la table
         self.main_window.verification_tab.table.setRowCount(0)
         
+        # Vérifier si le navigateur est toujours actif ou s'il faut le réinitialiser
+        if self.browser_controller.browser_model.driver:
+            try:
+                # Tester si la session est toujours valide
+                self.browser_controller.browser_model.driver.current_url
+            except Exception as e:
+                self._on_log("Session de navigateur expirée, réinitialisation...")
+                self.browser_controller.close_browser()
+                self.browser_controller.browser_model.driver = None
+        
         # Initialiser le navigateur si nécessaire
         if not self.browser_controller.browser_model.driver:
-            driver = self.browser_controller.initialize_browser(wait_page_load=True)
+            # Récupérer le mode headless depuis les paramètres
+            headless_mode = self.settings.headless_mode if hasattr(self.settings, "headless_mode") else False
+            
+            # Afficher un message si le mode invisible est activé
+            if headless_mode:
+                self._on_log("Mode invisible activé pour la vérification")
+            
+            driver = self.browser_controller.initialize_browser(wait_page_load=True, headless_mode=headless_mode)
             if not driver:
                 self._on_log("Impossible d'initialiser le navigateur")
                 self.main_window.verification_tab.reset_ui()
@@ -145,7 +196,29 @@ class AppController(QObject):
         """Met à jour les paramètres de l'application"""
         self.settings.update(new_settings)
         self.settings.save()
+        
+        # Transmettre les paramètres mis à jour au contrôleur de navigateur
+        self.browser_controller.set_settings(self.settings)
+        
+        # Mettre à jour l'affichage du nom d'utilisateur si nécessaire
+        if "auto_detect_username" in new_settings or "username" in new_settings:
+            if not self.settings.auto_detect_username and self.settings.username:
+                self.main_window.verification_tab.set_username(self.settings.username)
+            elif self.settings.auto_detect_username and self.settings.username and self.browser_controller.username is None:
+                # Si mode auto mais pas encore connecté au navigateur, utiliser le nom des paramètres avec indication
+                self.main_window.verification_tab.set_username(f"{self.settings.username} (Auto)")
+            elif self.settings.auto_detect_username and self.browser_controller.username:
+                # Si mode auto et déjà connecté, utiliser le nom détecté avec indication
+                self.main_window.verification_tab.set_username(f"{self.browser_controller.username} (Auto)")
+        
         self._on_log("Paramètres sauvegardés")
+    
+    def _on_links_changed(self, links):
+        """Enregistre les liens modifiés"""
+        self.giveaway_controller.set_links(links)
+        self.settings.save_links(links)
+        self._on_log(f"Liste de liens mise à jour: {len(links)} liens")
+
     
     def _on_import_links(self, file_path):
         """Importe des liens depuis un fichier"""
@@ -326,16 +399,55 @@ class AppController(QObject):
                 "Impossible d'initialiser le navigateur Chrome."
             )
     
-    def _on_login_status(self, logged_in):
-        """Appelé lorsque l'état de connexion change"""
-        if not logged_in:
-            # Réinitialiser l'interface
-            self.main_window.participation_tab.reset_ui()
-            self.main_window.verification_tab.reset_ui()
+    
+    def _on_login_success(self):
+        """Appelé lorsque la connexion est réussie"""
+        username = self.browser_controller.username
+        
+        # Mettre à jour l'interface avec le nom d'utilisateur
+        if username:
+            # Vérifier si on est en mode auto-détection
+            if self.settings.auto_detect_username:
+                display_name = f"{username} (Auto)"
+                self.main_window.set_status(f"Connecté en tant que {display_name}")
+                self.main_window.verification_tab.set_username(display_name)
+            else:
+                self.main_window.set_status(f"Connecté en tant que {username}")
+                self.main_window.verification_tab.set_username(username)
             
-            # Afficher un message d'erreur
-            QMessageBox.critical(
-                self.main_window,
-                "Erreur de connexion",
-                "Impossible de se connecter à Instant Gaming."
-            )
+            # Log pour debug
+            self._on_log(f"Connexion réussie - Username: {username}")
+            
+        self.main_window.update_ui_after_login()
+    
+    def _on_login_status(self, success):
+        """Appelé lorsque le statut de connexion change"""
+        if success:
+            self._on_log("Connexion réussie, mise à jour de l'interface")
+            
+            # Récupérer le nom d'utilisateur
+            username = self.browser_controller.username
+            
+            # Mise à jour de l'affichage selon le mode
+            if self.settings.auto_detect_username and username:
+                # Mode auto avec nom détecté
+                self.main_window.verification_tab.set_username(f"{username} (Auto)")
+            elif not self.settings.auto_detect_username and self.settings.username:
+                # Mode manuel avec nom configuré
+                self.main_window.verification_tab.set_username(self.settings.username)
+            elif username:
+                # Fallback sur le nom détecté
+                self.main_window.verification_tab.set_username(username)
+            else:
+                # Aucun nom disponible
+                self.main_window.verification_tab.set_username("Non connecté")
+        else:
+            self._on_log("Échec de la connexion")
+            
+            # En cas d'échec, afficher le nom configuré si disponible
+            if not self.settings.auto_detect_username and self.settings.username:
+                self.main_window.verification_tab.set_username(self.settings.username)
+            elif self.settings.auto_detect_username and self.settings.username:
+                self.main_window.verification_tab.set_username(f"{self.settings.username} (Auto)")
+            else:
+                self.main_window.verification_tab.set_username("Non connecté")

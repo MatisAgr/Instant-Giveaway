@@ -25,7 +25,7 @@ SLEEPTIME = 0.3 # en seconde
 USER = os.getlogin()
 PATH = f"C:/Users/{USER}/AppData/Local/Google/Chrome/User Data"
 
-JSONPATH = 'json/links.json'
+JSONPATH = '../resources/data/links.json'
 
 # ----------------------- #
 NB_LIEN_404 = 0

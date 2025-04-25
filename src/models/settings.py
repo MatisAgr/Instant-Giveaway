@@ -11,7 +11,10 @@ class Settings:
     auto_download_driver: bool = True
     auto_close_tabs: bool = True
     retry_attempts: int = 3
+    headless_mode: bool = False
     links_file_path: str = "resources/data/links.json"
+    auto_detect_username: bool = True
+    username: str = ""
     
     @classmethod
     def load(cls) -> 'Settings':
@@ -26,6 +29,7 @@ class Settings:
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
+                print(f"Chargement des paramètres: {data}")  
                 return cls(**data)
         except (json.JSONDecodeError, FileNotFoundError):
             return cls()
@@ -40,9 +44,12 @@ class Settings:
         
         config_path = os.path.join(config_dir, 'settings.json')
         
+        # Débogage - vérifier si headless_mode est présent
+        print(f"Sauvegarde des paramètres: {asdict(self)}")
+        
         with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(asdict(self), f, indent=2)
-    
+
     def update(self, new_settings: dict) -> None:
         """Met à jour les paramètres"""
         for key, value in new_settings.items():

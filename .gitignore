@@ -1,6 +1,8 @@
 resources/data/links.json
+resources/data/links copy.json
 
-src/utils/chromedriver.exe
+
+utils/chromedriver.exe
 
 # Python cache files
 __pycache__

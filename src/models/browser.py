@@ -91,29 +91,49 @@ class BrowserModel:
         os.remove(zip_path)
         shutil.rmtree(extracted_dir)
     
-    def create_driver_options(self, wait_page_load: bool = False) -> Options:
+    def create_driver_options(self, wait_page_load: bool = False, headless_mode: bool = False) -> Options:
         """Crée et configure les options du driver Chrome"""
         options = Options()
         options.add_experimental_option('detach', True)
-        options.page_load_strategy = 'none' if not wait_page_load else 'eager'
+        options.page_load_strategy = 'eager' if wait_page_load else 'none'
         options.add_argument('--disable-extensions')
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
+        options.add_experimental_option('useAutomationExtension', False)
+        
+        # Ajouter le mode headless si activé avec des configurations améliorées
+        if headless_mode:
+            # Configuration avancée pour éviter la détection du mode headless
+            options.add_argument('--headless=new')
+            options.add_argument('--disable-gpu')
+            options.add_argument('--window-size=1920,1080')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            
+            # Résoudre les problèmes de WebGL
+            options.add_argument('--enable-unsafe-swiftshader')
+            options.add_argument('--enable-swiftshader-webgl')
+            
+            # Ajouter des en-têtes pour simuler un vrai navigateur
+            options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.7049.115 Safari/537.36')
+        
+        # Ajouter le chemin du profil utilisateur après les options headless
         options.add_argument(f'--user-data-dir={self.chrome_user_path}')
+        
         return options
-    
-    def initialize_driver(self, wait_page_load: bool = False) -> webdriver.Chrome:
+
+    def initialize_driver(self, wait_page_load: bool = False, headless_mode: bool = False) -> webdriver.Chrome:
         """Initialise et retourne un driver Chrome configuré"""
         try:
             chromedriver_path = self.get_chromedriver_path()
             service = Service(chromedriver_path)
-            options = self.create_driver_options(wait_page_load)
+            options = self.create_driver_options(wait_page_load, headless_mode)
             self.driver = webdriver.Chrome(service=service, options=options)
             return self.driver
         except Exception:
             # Si le driver n'est pas trouvé, on le télécharge
             self.download_chromedriver()
             service = Service(self.get_chromedriver_path())
-            options = self.create_driver_options(wait_page_load)
+            options = self.create_driver_options(wait_page_load, headless_mode)
             self.driver = webdriver.Chrome(service=service, options=options)
             return self.driver
     

@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                            QTableWidget, QTableWidgetItem, QHeaderView, 
-                           QLabel, QTextEdit, QProgressBar)
-from PyQt6.QtCore import pyqtSignal
+                           QLabel, QTextEdit, QProgressBar, QDialog)
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtGui import QFont, QColor
 
 class VerificationTab(QWidget):
     """Onglet pour vérifier les giveaways gagnés"""
@@ -11,11 +12,23 @@ class VerificationTab(QWidget):
     
     def __init__(self):
         super().__init__()
+        self.username = "En attente..."
         self.init_ui()
         
     def init_ui(self):
         """Initialisation de l'interface utilisateur"""
         layout = QVBoxLayout(self)
+        
+        # Affichage du pseudo de l'utilisateur avec un style amélioré
+        user_layout = QHBoxLayout()
+        self.connection_status_icon = QLabel("⚪")  # Cercle neutre pour l'état initial
+        
+        self.username_label = QLabel(f"Utilisateur: <b>{self.username}</b>")
+        
+        user_layout.addWidget(self.connection_status_icon)
+        user_layout.addWidget(self.username_label)
+        user_layout.addStretch()
+        layout.addLayout(user_layout)
         
         # Boutons de contrôle
         control_layout = QHBoxLayout()
@@ -65,6 +78,37 @@ class VerificationTab(QWidget):
         layout.addWidget(QLabel("Logs:"))
         layout.addWidget(self.log_area)
     
+    def set_username(self, username):
+        """Met à jour le nom d'utilisateur affiché"""
+        if username and username.strip():
+            self.username = username
+            self.username_label.setText(f"Utilisateur: <b>{self.username}</b>")
+            
+            # Mise à jour de l'indicateur de statut avec emoji
+            if "(Auto)" in username:
+                # Mode auto: utiliser un cercle orange
+                self.connection_status_icon.setText("🟠")
+                self.connection_status_icon.setToolTip("Connecté (Mode Auto)")
+            else:
+                # Mode manuel: utiliser un cercle vert
+                self.connection_status_icon.setText("🟢")
+                self.connection_status_icon.setToolTip("Connecté (Mode Manuel)")
+                
+            # Ajouter un message dans les logs
+            self.add_log(f"Utilisateur connecté: {self.username}")
+            # Activer le bouton de vérification
+            self.start_button.setEnabled(True)
+        else:
+            self.username = "Non connecté"
+            self.username_label.setText(f"Utilisateur: <b>{self.username}</b>")
+            
+            # Mettre à jour l'indicateur de statut
+            self.connection_status_icon.setText("⚫")
+            self.connection_status_icon.setToolTip("Non connecté")
+            self.add_log("Aucun utilisateur connecté")
+            # Désactiver le bouton de vérification
+            self.start_button.setEnabled(False)
+    
     def _on_start_clicked(self):
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
@@ -94,10 +138,25 @@ class VerificationTab(QWidget):
         self.wins_table.setItem(row_position, 0, QTableWidgetItem(influencer))
         self.wins_table.setItem(row_position, 1, QTableWidgetItem(url))
         self.wins_table.setItem(row_position, 2, QTableWidgetItem(date))
+        
+        # Mettre en surbrillance les lignes des victoires avec une couleur vert foncé
+        # qui conserve la lisibilité du texte
+        for col in range(3):
+            item = self.wins_table.item(row_position, col)
+            font = QFont()
+            font.setBold(True)
+            item.setFont(font)
+            # Vert foncé plus adapté à la lecture du texte
+            item.setBackground(QColor(120, 180, 120))  # Vert foncé
     
     def reset_ui(self):
         """Réinitialise l'interface utilisateur"""
-        self.start_button.setEnabled(True)
+        # Ne pas réinitialiser l'état du bouton Start si un utilisateur est connecté
+        if self.username != "En attente..." and self.username != "Non connecté":
+            self.start_button.setEnabled(True)
+        else:
+            self.start_button.setEnabled(False)
+            
         self.stop_button.setEnabled(False)
         self.progress_bar.setValue(0)
         self.status_label.setText("Prêt")
