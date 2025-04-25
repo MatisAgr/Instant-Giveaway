@@ -165,17 +165,7 @@ class BrowserController(QObject):
                         continue
                 
                 if not icon_user:
-                    self.log_signal.emit("Impossible de trouver le bouton de connexion")
-                    
-                    # Capture d'écran pour débogage
-                    screenshot_path = "debug_login_failed.png"
-                    driver.save_screenshot(screenshot_path)
-                    self.log_signal.emit(f"Capture d'écran enregistrée dans {screenshot_path}")
-                    
-                    # Le mode headless n'est peut-être pas compatible avec le site
-                    if is_headless:
-                        self.log_signal.emit("Le mode invisible semble incompatible avec Instant Gaming. Essayez en mode normal.")
-                    
+                    self.log_signal.emit("Impossible de trouver le bouton de connexion")                    
                     self.login_status_signal.emit(False)
                     return False
                 
