@@ -1,7 +1,7 @@
 import os
 import shutil
 import zipfile
-from typing import Optional, List
+from typing import Optional
 import requests
 import psutil
 from bs4 import BeautifulSoup
@@ -121,6 +121,7 @@ class BrowserModel:
         
         return options
 
+
     def initialize_driver(self, wait_page_load: bool = False, headless_mode: bool = False) -> webdriver.Chrome:
         """Initialise et retourne un driver Chrome configuré"""
         try:
@@ -136,7 +137,8 @@ class BrowserModel:
             options = self.create_driver_options(wait_page_load, headless_mode)
             self.driver = webdriver.Chrome(service=service, options=options)
             return self.driver
-    
+
+
     def close_driver(self):
         """Ferme le driver Chrome"""
         if self.driver:
