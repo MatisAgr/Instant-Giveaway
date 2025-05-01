@@ -8,9 +8,45 @@ Une application desktop pour automatiser la participation et la vérification de
 > **Je ne suis PAS responsable si votre compte Instant Gaming est suspendu ou banni suite à l'utilisation de cet outil.**
 > **L'utilisation d'outils d'automatisation peut être considérée comme un abus et entraîner des sanctions sur votre compte.**
 
-<h3> Aperçu : </h3>
+> [!TIP]
+> 
+> #### Liens de giveaway
+> Pour des raisons évidentes, les liens des giveaways actifs ne sont pas fournis avec le programme. Chaque utilisateur devra trouver et ajouter ses propres liens de giveaways Instant Gaming.
+> 
+> Le fichier links.json est initialement vide ou contient uniquement des exemples. À vous de le compléter !
 
-![image](https://github.com/user-attachments/assets/preview-image)
+<h3>Aperçu :</h3>
+<table>
+  <tr>
+    <td width="50%">
+      
+![image](https://github.com/user-attachments/assets/d2affb28-c394-4af7-a7a1-9eb8b8356521)
+      
+<p align="center">Onglet Participation</p>
+    </td>
+    <td width="50%">
+
+![image](https://github.com/user-attachments/assets/36ed62cf-bcb0-4c26-98cb-cffdca7c59d6)
+      
+<p align="center">Onglet Vérification</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+
+![image](https://github.com/user-attachments/assets/9f83f0f6-a85f-4d6e-8e26-74dc0b70ba5b)
+
+      
+  <p align="center">Gestion des liens</p>
+    </td>
+    <td width="50%">
+
+![image](https://github.com/user-attachments/assets/7e26bc6b-13dd-44c0-a1c6-cc15cdbda3f4)
+
+   <p align="center">Paramètres</p>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -20,9 +56,7 @@ Une application desktop pour automatiser la participation et la vérification de
 - [Configuration](#configuration)
 - [Utilisation](#utilisation)
 - [Fonctionnalités](#fonctionnalités)
-- [Structure du projet](#structure-du-projet)
 - [Dépendances](#dépendances)
-- [Technologies utilisées](#technologies-utilisées)
 
 ## Prérequis
 
@@ -103,14 +137,15 @@ Ce projet utilise les bibliothèques suivantes :
 - `beautifulsoup4` : Pour l'analyse HTML
 
 
-#### Remarque
-
-Une version console plus ancienne du projet est disponible dans le dossier `OLD`. 
-Cette version a été développée par [Mothix](https://github.com/MothixExe) ❤️ et contient les fonctionnalités de base pour la participation et la vérification des giveaways via une interface en ligne de commande.
-
-Les scripts originaux comprennent :
-- `participer.py` : Pour participer aux giveaways
-- `verif.py` : Pour vérifier les giveaways gagnés
-- `versionjs.py` : Alternative utilisant l'injection JavaScript
-
-Cette version peut être utile pour les utilisateurs préférant une interface en ligne de commande ou souhaitant comprendre le fonctionnement de base du programme. (Cette version étant ancienne ne dispose pas des patchs de bug et des nouvelles fonctionnalités)
+> [!NOTE]
+> ## Version console (OLD)
+> 
+> Une version console plus ancienne du projet est disponible dans le dossier `OLD`. 
+> Cette version a été développée par [Mothix](https://github.com/MothixExe) ❤️ et contient les fonctionnalités de base pour la participation et la vérification des giveaways via une interface en ligne de commande.
+> 
+> Les scripts originaux comprennent :
+> - `participer.py` : Pour participer aux giveaways
+> - `verif.py` : Pour vérifier les giveaways gagnés
+> - `versionjs.py` : Alternative utilisant l'injection JavaScript
+> 
+> Cette version peut être utile pour les utilisateurs préférant une interface en ligne de commande ou souhaitant comprendre le fonctionnement de base du programme. (Cette version étant ancienne ne dispose pas des patchs de bug et des nouvelles fonctionnalités)
