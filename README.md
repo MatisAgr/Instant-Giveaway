@@ -1,110 +1,112 @@
 # Instant-Giveaway
-Bot Instant Gaming
-
 Tisma : [![wakatime](https://wakatime.com/badge/user/a16f794f-b91d-4818-8dfc-d768ce605ece/project/c7ba3a6d-1d1d-42c2-ab13-09c6b41c0649.svg)](https://wakatime.com/badge/user/a16f794f-b91d-4818-8dfc-d768ce605ece/project/c7ba3a6d-1d1d-42c2-ab13-09c6b41c0649)
 
-# Instant-Giveaway
-## Instant Gaming Giveaway Utilimate Tool
-Une application desktop pour automatiser la participation et la vérification des giveaways sur Instant Gaming.
- 
+Une application desktop pour automatiser la participation et la vérification des giveaways sur Instant Gaming, vous permettant d'économiser du temps et de maximiser vos chances de gagner.
 
-## Fonctionnalités
+> [!CAUTION]
+> **Cette application peut violer les [conditions d'utilisation d'Instant Gaming](https://www.instant-gaming.com/en/terms-of-use/).**
+> **Je ne suis PAS responsable si votre compte Instant Gaming est suspendu ou banni suite à l'utilisation de cet outil.**
+> **L'utilisation d'outils d'automatisation peut être considérée comme un abus et entraîner des sanctions sur votre compte.**
 
-- Participation automatique aux giveaways Instant Gaming
-- Vérification des giveaways gagnés 
-- Gestion des liens de giveaway avec vérification de leur état (actif, mort, etc.)
-- Interface utilisateur intuitive avec onglets dédiés aux différentes fonctions
-- Mode invisible permettant d'exécuter Chrome en arrière-plan
-- Détection automatique du nom d'utilisateur ou configuration manuelle
+<h3> Aperçu : </h3>
+
+![image](https://github.com/user-attachments/assets/preview-image)
+
+<h3> Console : </h3>
+
+![image](https://github.com/user-attachments/assets/console-image)
+
+---
+
+## Table des matières
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Utilisation](#utilisation)
+- [Fonctionnalités](#fonctionnalités)
+- [Structure du projet](#structure-du-projet)
+- [Dépendances](#dépendances)
+- [Technologies utilisées](#technologies-utilisées)
+
+## Prérequis
+
+Avant de commencer, assurez-vous d'avoir installé :
+- [Python 3.8](https://www.python.org/downloads/) ou supérieur
+- [Google Chrome](https://www.google.com/chrome/) (dernière version recommandée)
+- Un compte Instant Gaming valide
 
 ## Installation
 
-### Prérequis
+1. Clonez le dépôt :
+```git clone https://github.com/MatisAgr/Instant-Giveaway.git```
 
-- Python 3.8 ou supérieur
-- Un navigateur Chrome installé
-- Un compte Instant Gaming
+2. Accédez au dossier du projet :
+```cd Instant-Giveaway```
 
-### Installation des dépendances
+3. Installez les dépendances :
+```pip install -r requirements.txt```
 
-pip install -r requirements.txt
-
-Les dépendances principales sont :
-- PyQt6
-- selenium
-- psutil
-- requests
-- beautifulsoup4
-
-## Utilisation
-
-1. Lancez l'application avec :
-   python main.py
-
-2. Configurez vos paramètres dans l'onglet "Paramètres"
-3. Ajoutez des liens de giveaway dans l'onglet "Gestion des liens"
-4. Participez aux giveaways avec l'onglet "Participation"
-5. Vérifiez vos gains avec l'onglet "Vérification"
-
-### Gestion des liens
-
-Vous pouvez ajouter des liens manuellement ou importer/exporter une liste de liens au format JSON. Le format standard est :
-https://www.instant-gaming.com/XX/giveaway/INFLUENCER
 
 ## Configuration
 
-Dans l'onglet "Paramètres", vous pouvez configurer :
+Dans l'onglet "Paramètres" de l'application, vous pouvez configurer :
 
-- Le chemin vers Chrome
-- Le délai d'attente entre les actions
-- Le téléchargement automatique du driver Chrome
-- La fermeture automatique des onglets
-- Le nombre de tentatives en cas d'échec
-- Le mode invisible (headless)
-- La détection automatique du nom d'utilisateur
+- **Navigateur** : Chemin vers l'exécutable Chrome
+- **Délais** : Temps d'attente entre les actions (coming soon)
+- **Mode invisible** : Exécution de Chrome en arrière-plan
+- **Détection du nom d'utilisateur** : Automatique ou manuel
+- **Options avancées** :
+  - Téléchargement automatique du driver Chrome
+  - Fermeture automatique des onglets
+  - Nombre de tentatives en cas d'échec
 
-## Fonctionnement
+## Utilisation
 
-L'application utilise Selenium pour automatiser les interactions avec le navigateur Chrome. Elle s'appuie sur votre profil Chrome existant pour éviter d'avoir à vous authentifier à chaque utilisation.
+1. Lancez l'application :
+```python main.py```
 
-Pour les giveaways, l'application :
-1. Visite chaque lien de giveaway
-2. Vérifie s'il est possible de participer
-3. Clique sur le bouton de participation
-4. Collecte les points bonus si disponibles
+2. **Gestion des liens** :
+- Ajoutez manuellement des liens de giveaway
+- Importez une liste de liens au format JSON
+- Vérifiez l'état des liens (actifs/morts)
 
-Pour la vérification des gains, l'application :
-1. Visite chaque lien de giveaway
-2. Vérifie si le giveaway est terminé avec un gagnant
-3. Compare le nom du gagnant avec votre nom d'utilisateur
-4. Affiche les giveaways que vous avez gagnés
+3. **Participation aux giveaways** :
+- Sélectionnez l'onglet "Participation"
+- Cliquez sur "Démarrer" pour participer automatiquement à tous les giveaways
+- L'application parcourt chaque lien et participe si possible
 
-## Structure du projet
+4. **Vérification des gains** :
+- Dans l'onglet "Vérification"
+- Lancez la vérification pour voir si vous avez gagné des giveaways
+- Les résultats s'affichent dans l'interface
 
-Instant-Giveaway/
-│
-├── main.py                 # Point d'entrée de l'application
-├── requirements.txt        # Dépendances Python
-│
-├── src/                    # Code source
-│   ├── controllers/        # Contrôleurs pour la logique métier
-│   ├── models/             # Modèles de données
-│   ├── utils/              # Utilitaires divers
-│   └── views/              # Interfaces utilisateur
-│
-└── resources/              # Ressources de l'application
-    ├── config/             # Fichiers de configuration
-    ├── data/               # Données (liens, etc.)
-    └── img/                # Images et icônes
+## Fonctionnalités
 
-## Contribution
+- **Participation automatique** : Visite chaque lien et participe aux giveaways
+- **Vérification des gains** : Vérifie si vous avez gagné des giveaways terminés
+- **Gestion des liens** : Interface pour ajouter, modifier, supprimer et vérifier les liens
+- **Mode invisible** : Exécution en arrière-plan sans afficher le navigateur
+- **Collecte de points bonus** : Récupération automatique des points bonus disponibles
+- **Interface intuitive** : Organisation en onglets pour une expérience utilisateur fluide
 
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou à proposer une pull request.
+## Dépendances
 
-## Licence
+Ce projet utilise les bibliothèques suivantes :
+- `PyQt6` : Pour l'interface graphique
+- `selenium` : Pour l'automatisation du navigateur
+- `psutil` : Pour la gestion des processus
+- `requests` : Pour les requêtes HTTP
+- `beautifulsoup4` : Pour l'analyse HTML
 
-Ce projet est sous licence open source.
 
-## Remarques
+#### Remarque
 
-Cette application est développée à des fins éducatives. L'utilisation abusive pourrait enfreindre les conditions d'utilisation d'Instant Gaming.
+Une version console plus ancienne du projet est disponible dans le dossier `OLD`. 
+Cette version a été développée par [Mothix](https://github.com/MothixExe) ❤️ et contient les fonctionnalités de base pour la participation et la vérification des giveaways via une interface en ligne de commande.
+
+Les scripts originaux comprennent :
+- `participer.py` : Pour participer aux giveaways
+- `verif.py` : Pour vérifier les giveaways gagnés
+- `versionjs.py` : Alternative utilisant l'injection JavaScript
+
+Cette version peut être utile pour les utilisateurs préférant une interface en ligne de commande ou souhaitant comprendre le fonctionnement de base du programme. (Cette version étant ancienne ne dispose pas des patchs de bug et des nouvelles fonctionnalités)
