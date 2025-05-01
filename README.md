@@ -12,10 +12,6 @@ Une application desktop pour automatiser la participation et la vérification de
 
 ![image](https://github.com/user-attachments/assets/preview-image)
 
-<h3> Console : </h3>
-
-![image](https://github.com/user-attachments/assets/console-image)
-
 ---
 
 ## Table des matières
@@ -62,7 +58,7 @@ Dans l'onglet "Paramètres" de l'application, vous pouvez configurer :
 
 ## Utilisation
 
-1. Lancez l'application :
+1. Lancez l'application (soyez connecté au préalable sur votre navigateur):
 ```python main.py```
 
 2. **Gestion des liens** :
