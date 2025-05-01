@@ -34,13 +34,19 @@ Avant de commencer, assurez-vous d'avoir installé :
 ## Installation
 
 1. Clonez le dépôt :
-```git clone https://github.com/MatisAgr/Instant-Giveaway.git```
+```sh
+git clone https://github.com/MatisAgr/Instant-Giveaway.git
+```
 
 2. Accédez au dossier du projet :
-```cd Instant-Giveaway```
+```sh
+cd Instant-Giveaway
+```
 
 3. Installez les dépendances :
-```pip install -r requirements.txt```
+```sh
+pip install -r requirements.txt
+```
 
 
 ## Configuration
@@ -59,7 +65,9 @@ Dans l'onglet "Paramètres" de l'application, vous pouvez configurer :
 ## Utilisation
 
 1. Lancez l'application (soyez connecté au préalable sur votre navigateur):
-```python main.py```
+```sh
+python main.py
+```
 
 2. **Gestion des liens** :
 - Ajoutez manuellement des liens de giveaway
