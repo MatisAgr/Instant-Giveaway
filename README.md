@@ -2,10 +2,15 @@
 Tisma : [![wakatime](https://wakatime.com/badge/user/a16f794f-b91d-4818-8dfc-d768ce605ece/project/c7ba3a6d-1d1d-42c2-ab13-09c6b41c0649.svg)](https://wakatime.com/badge/user/a16f794f-b91d-4818-8dfc-d768ce605ece/project/c7ba3a6d-1d1d-42c2-ab13-09c6b41c0649)
 
 Une application desktop pour automatiser la participation et la vérification des giveaways sur Instant Gaming, vous permettant d'économiser du temps et de maximiser vos chances de gagner.
+- **Ne collecte pas vos identifiants** : Instant-Giveaway n'a aucun accès à vos identifiants de connexion Instant Gaming.
+- **Fonctionne comme une macro** : L'application automatise simplement les actions que vous feriez manuellement (clics, navigation, etc.).
+- **Nécessite une connexion préalable** : Vous devez être déjà connecté à votre compte Instant Gaming dans votre navigateur avant de lancer l'application.
+- **Utilise votre navigateur existant** : L'application interagit avec votre profil Chrome déjà configuré, sans stocker ni transmettre vos données personnelles.
+
 
 > [!CAUTION]
 > **Cette application peut violer les [conditions d'utilisation d'Instant Gaming](https://www.instant-gaming.com/en/terms-of-use/).**
-> **Je ne suis PAS responsable si votre compte Instant Gaming est suspendu ou banni suite à l'utilisation de cet outil.**
+> **Je ne suis pas responsable si votre compte Instant Gaming est suspendu ou banni suite à l'utilisation de cet outil.**
 > **L'utilisation d'outils d'automatisation peut être considérée comme un abus et entraîner des sanctions sur votre compte.**
 
 > [!TIP]
