@@ -4,5 +4,9 @@ resources/data/links copy.json
 
 utils/chromedriver.exe
 
+build/
+dist/
+Instant-Giveaway.spec
+
 # Python cache files
 __pycache__
