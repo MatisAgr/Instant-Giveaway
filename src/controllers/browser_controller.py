@@ -92,10 +92,10 @@ class BrowserController(QObject):
                 self.log_signal.emit("Mode headless - Attente prolongée du chargement...")
                 time.sleep(5)  # Attente de 5 secondes pour s'assurer que la page est bien chargée
                 
-                # Capture d'écran pour déboguer en mode headless
-                screenshot_path = "debug_homepage.png"
-                driver.save_screenshot(screenshot_path)
-                self.log_signal.emit(f"Capture d'écran de la page d'accueil enregistrée dans {screenshot_path}")
+                # # Capture d'écran pour déboguer en mode headless
+                # screenshot_path = "debug_homepage.png"
+                # driver.save_screenshot(screenshot_path)
+                # self.log_signal.emit(f"Capture d'écran de la page d'accueil enregistrée dans {screenshot_path}")
             
             # Vérifie si l'utilisateur est connecté avec plusieurs tentatives
             is_connected = False
@@ -230,12 +230,12 @@ class BrowserController(QObject):
             self.log_signal.emit(f"Erreur lors de la connexion: {str(e)}")
             
             # Capture d'écran en cas d'erreur
-            try:
-                screenshot_path = "login_error.png"
-                driver.save_screenshot(screenshot_path)
-                self.log_signal.emit(f"Capture d'écran d'erreur enregistrée dans {screenshot_path}")
-            except:
-                pass
+            # try:
+            #     screenshot_path = "login_error.png"
+            #     driver.save_screenshot(screenshot_path)
+            #     self.log_signal.emit(f"Capture d'écran d'erreur enregistrée dans {screenshot_path}")
+            # except:
+            #     pass
                 
             self.login_status_signal.emit(False)
             return False
